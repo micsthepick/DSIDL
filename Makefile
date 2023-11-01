@@ -33,12 +33,12 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all: checkarm7 checkarm9 $(TARGET).dsi
+all: checkarm7 checkarm9 $(TARGET).dsi $(TARGET).sym
 
 #---------------------------------------------------------------------------------
 checkarm7:
 	$(MAKE) -C arm7
-	
+
 #---------------------------------------------------------------------------------
 checkarm9:
 	$(MAKE) -C arm9
@@ -51,12 +51,28 @@ $(TARGET).dsi	:	$(NITRO_FILES) arm7/$(TARGET).elf arm9/$(TARGET).elf
 	@echo built ... $(notdir $@)
 
 #---------------------------------------------------------------------------------
+$(TARGET).sym: $(TARGET).arm7.sym $(TARGET).arm9.sym
+	$(SILENTCMD)cat $(TARGET).arm9.sym $(TARGET).arm7.sym | uniq | grep -E '.+ .+' > $(TARGET).sym
+
+#---------------------------------------------------------------------------------
 arm7/$(TARGET).elf:
 	$(MAKE) -C arm7
-	
+
 #---------------------------------------------------------------------------------
 arm9/$(TARGET).elf:
 	$(MAKE) -C arm9
+
+#---------------------------------------------------------------------------------
+$(TARGET).arm7.sym: arm7/$(TARGET).elf
+	$(SILENTCMD)$(DEVKITARM)/bin/arm-none-eabi-nm -n arm7/$(TARGET).elf > $(TARGET).arm7.raw.sym
+	$(SILENTCMD)sed -r 's/([0-9a-fA-F]{8}) [a-zA-Z] (.*)/\1 \2/g' $(TARGET).arm7.raw.sym > $(TARGET).arm7.sym
+	$(SILENTCMD)rm $(TARGET).arm7.raw.sym
+
+#---------------------------------------------------------------------------------
+$(TARGET).arm9.sym: arm9/$(TARGET).elf
+	$(SILENTCMD)$(DEVKITARM)/bin/arm-none-eabi-nm -n arm9/$(TARGET).elf > $(TARGET).arm9.raw.sym
+	$(SILENTCMD)sed -r 's/([0-9a-fA-F]{8}) [a-zA-Z] (.*)/\1 \2/g' $(TARGET).arm9.raw.sym > $(TARGET).arm9.sym
+	$(SILENTCMD)rm $(TARGET).arm9.raw.sym
 
 #---------------------------------------------------------------------------------
 clean:

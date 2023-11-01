@@ -4,6 +4,7 @@ arm9/include/version.h
 *.dsi
 *.elf
 *.cia
+*.sym
 
 *.DS_Store
 .vscode
